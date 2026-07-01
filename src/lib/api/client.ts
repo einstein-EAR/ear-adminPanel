@@ -1,4 +1,5 @@
 import type { ApiClientConfig, ApiRequestConfig, HttpMethod } from "./types";
+import { clearAuth, getToken } from "@/src/lib/auth";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -15,7 +16,8 @@ export class ApiError extends Error {
 }
 
 const defaultConfig: ApiClientConfig = {
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? "",
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000",
+  getAuthToken: () => getToken(),
 };
 
 let clientConfig: ApiClientConfig = { ...defaultConfig };
@@ -71,17 +73,14 @@ async function parseErrorBody(response: Response) {
   }
 }
 
-function buildHeaders(
-  config?: ApiRequestConfig,
-  hasBody?: boolean,
-): HeadersInit {
+function buildHeaders(config?: ApiRequestConfig, body?: unknown): HeadersInit {
   const headers = new Headers(clientConfig.defaultHeaders);
 
-  if (hasBody) {
+  if (body !== undefined && !(body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
 
-  const token = clientConfig.getAuthToken?.();
+  const token = clientConfig.getAuthToken?.()?.trim();
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
@@ -95,24 +94,40 @@ function buildHeaders(
   return headers;
 }
 
+function serializeBody(body: unknown): BodyInit | undefined {
+  if (body === undefined) return undefined;
+  if (body instanceof FormData) return body;
+  return JSON.stringify(body);
+}
+
 async function request<T>(
   method: HttpMethod,
   endpoint: string,
   body?: unknown,
   config?: ApiRequestConfig,
 ): Promise<T> {
-  const hasBody = body !== undefined && method !== "GET";
   const url = buildUrl(endpoint, config?.params);
 
   const response = await fetch(url, {
     method,
-    headers: buildHeaders(config, hasBody),
-    body: hasBody ? JSON.stringify(body) : undefined,
+    headers: buildHeaders(config, body),
+    body: serializeBody(body),
     signal: config?.signal,
   });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response);
+
+    if (
+      response.status === 401 &&
+      typeof window !== "undefined" &&
+      !endpoint.includes("/auth/login") &&
+      getToken()
+    ) {
+      clearAuth();
+      window.location.replace("/login");
+    }
+
     throw new ApiError(response.status, response.statusText, errorData);
   }
 

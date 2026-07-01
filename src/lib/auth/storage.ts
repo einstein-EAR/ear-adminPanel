@@ -5,7 +5,8 @@ const USER_KEY = "ear_auth_user";
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
+  const token = localStorage.getItem(TOKEN_KEY)?.trim();
+  return token || null;
 }
 
 export function getUser(): AuthUser | null {
@@ -22,7 +23,7 @@ export function getUser(): AuthUser | null {
 }
 
 export function setAuth(token: string, user: AuthUser) {
-  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(TOKEN_KEY, token.trim());
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 

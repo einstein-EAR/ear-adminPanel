@@ -1,2 +1,10 @@
 export { useContactForms, CONTACT_FORMS_QUERY_KEY } from "./useContactForms";
 export { usePaperSubmissions, PAPER_SUBMISSIONS_QUERY_KEY } from "./usePaperSubmissions";
+export { useCreateJournal } from "./useCreateJournal";
+export { useGetJournals, useGetJournalById, JOURNALS_QUERY_KEY } from "./useGetJournals";
+export { useIssuesByJournal, ISSUES_QUERY_KEY } from "./useIssuesByJournal";
+export { useCreateIssue } from "./useCreateIssue";
+export { useGetIssueById } from "./useGetIssueById";
+export { useUploadIssuePdfs } from "./useUploadIssuePdfs";
+export { useDeleteIssue } from "./useDeleteIssue";
+export { useDeleteJournal } from "./useDeleteJournal";
