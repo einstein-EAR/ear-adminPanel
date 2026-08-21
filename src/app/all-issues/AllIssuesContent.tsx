@@ -7,6 +7,7 @@ import { ArrowLeft, BookOpen, Hash, Loader2, Plus } from "lucide-react";
 import { PageContainer } from "@/src/components/layout/PageContainer";
 import { PageHeader } from "@/src/components/layout/PageHeader";
 import { useGetJournalById, useIssuesByJournal } from "@/src/hooks";
+import type { JournalIssue } from "@/src/types/issue";
 import CreateIssueModal from "../components/all-issues/CreateIssueModal";
 import IssueDetailScreen from "../components/all-issues/IssueDetailScreen";
 import IssuesList from "../components/all-issues/IssuesList";
@@ -16,6 +17,7 @@ export default function AllIssuesContent() {
   const journalId = searchParams.get("journalId");
   const issueId = searchParams.get("issueId");
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingIssue, setEditingIssue] = useState<JournalIssue | null>(null);
 
   const {
     data: journal,
@@ -30,6 +32,21 @@ export default function AllIssuesContent() {
     isError: issuesError,
     error: issuesErrorData,
   } = useIssuesByJournal(journalId);
+
+  const openCreateModal = () => {
+    setEditingIssue(null);
+    setModalOpen(true);
+  };
+
+  const openEditModal = (issue: JournalIssue) => {
+    setEditingIssue(issue);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditingIssue(null);
+  };
 
   if (journalId && issueId) {
     return <IssueDetailScreen journalId={journalId} issueId={issueId} />;
@@ -114,7 +131,7 @@ export default function AllIssuesContent() {
             </div>
             <button
               type="button"
-              onClick={() => setModalOpen(true)}
+              onClick={openCreateModal}
               className="inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-[#024081] to-[#036eb6] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"
             >
               <Plus className="h-4 w-4" aria-hidden />
@@ -131,16 +148,21 @@ export default function AllIssuesContent() {
               journalId={journalId}
               issues={issues ?? []}
               isLoading={issuesLoading}
+              onEdit={openEditModal}
             />
           )}
         </>
       ) : null}
 
-      <CreateIssueModal
-        journalId={journalId}
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-      />
+      {modalOpen ? (
+        <CreateIssueModal
+          key={editingIssue?._id ?? "create-issue"}
+          journalId={journalId}
+          open={modalOpen}
+          issue={editingIssue}
+          onClose={closeModal}
+        />
+      ) : null}
     </PageContainer>
   );
 }

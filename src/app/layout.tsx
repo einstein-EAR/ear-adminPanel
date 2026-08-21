@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AdminShell } from "@/src/components/layout/AdminShell";
 import { ApiAuthSetup } from "@/src/components/auth/ApiAuthSetup";
+import { ToastProvider } from "@/src/components/providers/ToastProvider";
 import { QueryProvider } from "@/src/providers/QueryProvider";
 import "./globals.css";
 
@@ -34,6 +35,7 @@ export default function RootLayout({
         <QueryProvider>
           <ApiAuthSetup />
           <AdminShell>{children}</AdminShell>
+          <ToastProvider />
         </QueryProvider>
       </body>
     </html>

@@ -1,30 +1,39 @@
 "use client";
 
 import { Loader2, Lock, Mail } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
-import { ApiError, useApiPost } from "@/src/lib/api";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useEffect, useState } from "react";
+import { useApiPost } from "@/src/lib/api";
 import { isAuthenticated, setAuth, type LoginPayload, type LoginResponse } from "@/src/lib/auth";
+import { toastError, toastSuccess } from "@/src/lib/toast";
+import PasswordInput from "@/src/components/ui/PasswordInput";
 
 const fieldClassName =
   "w-full border-0 border-b-2 border-slate-200 bg-transparent py-3 text-slate-800 placeholder:text-slate-400 transition-colors duration-300 focus:border-[#036eb6] focus:outline-none focus:ring-0";
 
-export default function LoginPage() {
+function getSafeNextPath(next: string | null) {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return "/";
+  return next;
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = getSafeNextPath(searchParams.get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({ email: "", password: "", form: "" });
+  const [errors, setErrors] = useState({ email: "", password: "" });
 
   const loginMutation = useApiPost<LoginResponse, LoginPayload>("/auth/login");
 
   useEffect(() => {
     if (isAuthenticated()) {
-      router.replace("/");
+      router.replace(nextPath);
     }
-  }, [router]);
+  }, [router, nextPath]);
 
   const validate = () => {
-    const nextErrors = { email: "", password: "", form: "" };
+    const nextErrors = { email: "", password: "" };
 
     if (!email.trim()) {
       nextErrors.email = "Email is required";
@@ -42,26 +51,17 @@ export default function LoginPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setErrors({ email: "", password: "", form: "" });
+    setErrors({ email: "", password: "" });
 
     if (!validate()) return;
 
     try {
       const data = await loginMutation.mutateAsync({ email, password });
       setAuth(data.token, data.user);
-      router.replace("/");
+      toastSuccess("Logged in successfully.");
+      router.replace(nextPath);
     } catch (error) {
-      const message =
-        error instanceof ApiError
-          ? typeof error.data === "object" &&
-            error.data !== null &&
-            "message" in error.data &&
-            typeof (error.data as { message: unknown }).message === "string"
-            ? (error.data as { message: string }).message
-            : error.message
-          : "Login failed. Please try again.";
-
-      setErrors((prev) => ({ ...prev, form: message }));
+      toastError(error, "Login failed. Please try again.");
     }
   };
 
@@ -100,7 +100,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
-                      setErrors((prev) => ({ ...prev, email: "", form: "" }));
+                      setErrors((prev) => ({ ...prev, email: "" }));
                     }}
                     className={fieldClassName}
                   />
@@ -120,18 +120,17 @@ export default function LoginPage() {
               <div className="flex items-start gap-3">
                 <Lock className="mt-3 h-5 w-5 shrink-0 text-[#036eb6]" aria-hidden />
                 <div className="min-w-0 flex-1">
-                  <input
+                  <PasswordInput
                     id="password"
                     name="password"
-                    type="password"
                     autoComplete="current-password"
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
-                      setErrors((prev) => ({ ...prev, password: "", form: "" }));
+                      setErrors((prev) => ({ ...prev, password: "" }));
                     }}
-                    className={fieldClassName}
+                    inputClassName={fieldClassName}
                   />
                   {errors.password ? (
                     <p className="mt-1.5 text-sm text-red-600" role="alert">
@@ -142,12 +141,6 @@ export default function LoginPage() {
               </div>
             </div>
           </div>
-
-          {errors.form ? (
-            <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
-              {errors.form}
-            </p>
-          ) : null}
 
           <button
             type="submit"
@@ -166,5 +159,19 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-slate-50">
+          <p className="text-sm text-[#858c93]">Loading...</p>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

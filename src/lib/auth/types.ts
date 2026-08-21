@@ -14,3 +14,16 @@ export type LoginResponse = {
   user: AuthUser;
   token: string;
 };
+
+export type UpdateCredentialsInput = {
+  name: string;
+  email: string;
+  password: string;
+  currentPassword: string;
+};
+
+export type UpdateCredentialsResponse = {
+  message: string;
+  user: AuthUser;
+  token: string;
+};

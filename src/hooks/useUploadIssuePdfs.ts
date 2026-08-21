@@ -2,23 +2,26 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient, ApiError } from "@/src/lib/api";
-import type { JournalIssue } from "@/src/types/issue";
+import type { JournalIssue, UploadIssuePdfsInput } from "@/src/types/issue";
 import { ISSUES_QUERY_KEY } from "./useIssuesByJournal";
-
-export type UploadIssuePdfsInput = {
-  issueId: string;
-  title: string;
-  files: File[];
-};
 
 function getFileExtension(filename: string) {
   const dot = filename.lastIndexOf(".");
   return dot >= 0 ? filename.slice(dot) : ".pdf";
 }
 
-function toUploadFormData({ title, files }: UploadIssuePdfsInput): FormData {
+function toUploadFormData({
+  title,
+  author,
+  doi,
+  files,
+}: UploadIssuePdfsInput): FormData {
   const formData = new FormData();
   const safeTitle = title.trim();
+
+  formData.append("title", safeTitle);
+  formData.append("author", author.trim());
+  formData.append("doi", doi.trim());
 
   files.forEach((file, index) => {
     const ext = getFileExtension(file.name);

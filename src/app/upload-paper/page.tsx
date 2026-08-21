@@ -30,7 +30,7 @@ export default function UploadPaperPage() {
         <button
           type="button"
           onClick={() => setView("create")}
-          className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition cursor-pointer ${
+          className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition cursor-pointer cursor-pointer ${
             view === "create"
               ? "bg-[#024081] text-white shadow-sm"
               : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
@@ -41,7 +41,7 @@ export default function UploadPaperPage() {
         <button
           type="button"
           onClick={() => setView("list")}
-          className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
+          className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition cursor-pointer ${
             view === "list"
               ? "bg-[#024081] text-white shadow-sm"
               : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"

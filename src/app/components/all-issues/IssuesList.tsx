@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Clock, FileText, Loader2, Trash2 } from "lucide-react";
+import { ChevronRight, Clock, FileText, Loader2, Pencil, Trash2 } from "lucide-react";
 import ConfirmDialog from "@/src/components/ui/ConfirmDialog";
 import { formatToIST } from "@/src/lib/formatDate";
+import { toastError, toastSuccess } from "@/src/lib/toast";
 import { useDeleteIssue } from "@/src/hooks";
 import type { JournalIssue } from "@/src/types/issue";
 
@@ -12,21 +13,19 @@ type IssuesListProps = {
   journalId: string;
   issues: JournalIssue[];
   isLoading?: boolean;
+  onEdit?: (issue: JournalIssue) => void;
 };
 
-export default function IssuesList({ journalId, issues, isLoading }: IssuesListProps) {
+export default function IssuesList({
+  journalId,
+  issues,
+  isLoading,
+  onEdit,
+}: IssuesListProps) {
   const router = useRouter();
   const [issueToDelete, setIssueToDelete] = useState<JournalIssue | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const deleteIssue = useDeleteIssue();
-
-  useEffect(() => {
-    if (!successMessage) return;
-
-    const timer = window.setTimeout(() => setSuccessMessage(null), 4000);
-    return () => window.clearTimeout(timer);
-  }, [successMessage]);
 
   const handleConfirmDelete = async () => {
     if (!issueToDelete) return;
@@ -36,10 +35,10 @@ export default function IssuesList({ journalId, issues, isLoading }: IssuesListP
         issueId: issueToDelete._id,
         journalId,
       });
-      setSuccessMessage("Issue deleted successfully.");
+      toastSuccess("Issue deleted successfully.");
       setIssueToDelete(null);
-    } catch {
-      // Error handling can be extended with inline error state if needed.
+    } catch (error) {
+      toastError(error, "Failed to delete issue. Please try again.");
     }
   };
 
@@ -62,15 +61,6 @@ export default function IssuesList({ journalId, issues, isLoading }: IssuesListP
 
   return (
     <>
-      {successMessage ? (
-        <div
-          className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-800"
-          role="status"
-        >
-          {successMessage}
-        </div>
-      ) : null}
-
       <ul className="space-y-4">
         {issues.map((issue) => (
           <li
@@ -87,6 +77,9 @@ export default function IssuesList({ journalId, issues, isLoading }: IssuesListP
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <h3 className="text-lg font-semibold text-[#092151]">{issue.issueLabel}</h3>
+                  {issue.description ? (
+                    <p className="mt-1 line-clamp-2 text-sm text-[#858c93]">{issue.description}</p>
+                  ) : null}
                   <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-[#858c93]">
                     <Clock className="h-3.5 w-3.5 text-[#036eb6]" aria-hidden />
                     Created {formatToIST(issue.created_at)}
@@ -102,6 +95,17 @@ export default function IssuesList({ journalId, issues, isLoading }: IssuesListP
                 </div>
               </div>
             </button>
+
+            {onEdit ? (
+              <button
+                type="button"
+                onClick={() => onEdit(issue)}
+                className="flex shrink-0 items-center justify-center border-l border-slate-100 px-4 text-slate-400 transition hover:bg-blue-50 hover:text-[#036eb6] sm:px-5"
+                aria-label={`Edit ${issue.issueLabel}`}
+              >
+                <Pencil className="h-5 w-5" aria-hidden />
+              </button>
+            ) : null}
 
             <button
               type="button"

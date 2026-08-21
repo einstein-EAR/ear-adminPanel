@@ -2,8 +2,8 @@
 
 import { BookOpen, Hash, ImagePlus, Loader2, ScrollText } from "lucide-react";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { ApiError } from "@/src/lib/api";
 import { useCreateJournal } from "@/src/hooks";
+import { toastError, toastSuccess } from "@/src/lib/toast";
 
 const fieldClassName =
   "w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-slate-800 placeholder:text-slate-400 transition-colors duration-300 focus:border-[#036eb6] focus:outline-none focus:ring-2 focus:ring-[#036eb6]/20";
@@ -20,9 +20,7 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
     description: "",
     serialNumber: "",
     image: "",
-    form: "",
   });
-  const [success, setSuccess] = useState(false);
 
   const createJournal = useCreateJournal();
   const previewUrlRef = useRef<string | null>(null);
@@ -53,7 +51,7 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
   };
 
   const validate = () => {
-    const next = { title: "", description: "", serialNumber: "", image: "", form: "" };
+    const next = { title: "", description: "", serialNumber: "", image: "" };
 
     if (!title.trim()) next.title = "Journal title is required";
     if (!description.trim()) next.description = "Description is required";
@@ -67,8 +65,7 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setErrors({ title: "", description: "", serialNumber: "", image: "", form: "" });
-    setSuccess(false);
+    setErrors({ title: "", description: "", serialNumber: "", image: "" });
 
     if (!validate() || !image) return;
 
@@ -85,20 +82,10 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
       setSerialNumber("");
       handleImageChange(null);
       setFileInputKey((prev) => prev + 1);
-      setSuccess(true);
+      toastSuccess("Journal created successfully.");
       onCreated?.();
     } catch (error) {
-      const message =
-        error instanceof ApiError
-          ? typeof error.data === "object" &&
-            error.data !== null &&
-            "message" in error.data &&
-            typeof (error.data as { message: unknown }).message === "string"
-            ? (error.data as { message: string }).message
-            : error.message
-          : "Failed to create journal. Please try again.";
-
-      setErrors((prev) => ({ ...prev, form: message }));
+      toastError(error, "Failed to create journal. Please try again.");
     }
   };
 
@@ -137,7 +124,7 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
                   value={title}
                   onChange={(e) => {
                     setTitle(e.target.value);
-                    setErrors((prev) => ({ ...prev, title: "", form: "" }));
+                    setErrors((prev) => ({ ...prev, title: "" }));
                   }}
                   placeholder="International Journal of Research..."
                   className={fieldClassName}
@@ -167,7 +154,7 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
                   value={serialNumber}
                   onChange={(e) => {
                     setSerialNumber(e.target.value);
-                    setErrors((prev) => ({ ...prev, serialNumber: "", form: "" }));
+                    setErrors((prev) => ({ ...prev, serialNumber: "" }));
                   }}
                   placeholder="e.g. ISSN 2455-6211"
                   className={fieldClassName}
@@ -197,7 +184,7 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
                   value={description}
                   onChange={(e) => {
                     setDescription(e.target.value);
-                    setErrors((prev) => ({ ...prev, description: "", form: "" }));
+                    setErrors((prev) => ({ ...prev, description: "" }));
                   }}
                   placeholder="Brief description about the journal scope, indexing, and publication details..."
                   className={`${fieldClassName} resize-none`}
@@ -225,7 +212,7 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
                   accept="image/*"
                   onChange={(e) => {
                     handleImageChange(e.target.files?.[0] ?? null);
-                    setErrors((prev) => ({ ...prev, image: "", form: "" }));
+                    setErrors((prev) => ({ ...prev, image: "" }));
                   }}
                   className="w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-[#f4f8fc] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[#024081] hover:file:bg-blue-100"
                 />
@@ -260,28 +247,10 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
         </aside>
       </div>
 
-      {errors.form ? (
-        <p
-          className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-          role="alert"
-        >
-          {errors.form}
-        </p>
-      ) : null}
-
-      {success ? (
-        <p
-          className="mt-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
-          role="status"
-        >
-          Journal created successfully.
-        </p>
-      ) : null}
-
       <button
         type="submit"
         disabled={createJournal.isPending}
-        className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-linear-to-r from-[#024081] to-[#036eb6] py-3 text-sm font-semibold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:translate-y-0 disabled:opacity-60"
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-linear-to-r from-[#024081] to-[#036eb6] py-3 text-sm font-semibold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:translate-y-0 disabled:opacity-60 cursor-pointer" 
       >
         {createJournal.isPending ? (
           <>

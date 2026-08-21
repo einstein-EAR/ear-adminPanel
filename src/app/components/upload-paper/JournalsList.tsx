@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Clock, Hash, Loader2, Trash2 } from "lucide-react";
 import ConfirmDialog from "@/src/components/ui/ConfirmDialog";
 import { formatToIST } from "@/src/lib/formatDate";
+import { toastError, toastSuccess } from "@/src/lib/toast";
 import { useDeleteJournal } from "@/src/hooks";
 import type { Journal } from "@/src/types/journal";
 
@@ -30,7 +31,7 @@ function JournalCard({ journal, onDelete }: JournalCardProps) {
       <button
         type="button"
         onClick={handleClick}
-        className="flex h-full flex-col text-left"
+        className="flex h-full flex-col text-left cursor-pointer"
       >
         <div className="relative aspect-3/4 w-full overflow-hidden bg-[#f4f8fc]">
           {journal.imageUrl ? (
@@ -71,7 +72,7 @@ function JournalCard({ journal, onDelete }: JournalCardProps) {
       <button
         type="button"
         onClick={() => onDelete(journal)}
-        className="absolute right-3 top-3 rounded-lg bg-white/90 p-2 text-slate-400 shadow-sm transition hover:bg-red-50 hover:text-red-600"
+        className="absolute right-3 top-3 rounded-lg bg-white/90 p-2 text-slate-400 shadow-sm transition hover:bg-red-50 hover:text-red-600 cursor-pointer"
         aria-label={`Delete ${journal.title}`}
       >
         <Trash2 className="h-4 w-4" aria-hidden />
@@ -82,26 +83,18 @@ function JournalCard({ journal, onDelete }: JournalCardProps) {
 
 export default function JournalsList({ journals, isLoading }: JournalsListProps) {
   const [journalToDelete, setJournalToDelete] = useState<Journal | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const deleteJournal = useDeleteJournal();
-
-  useEffect(() => {
-    if (!successMessage) return;
-
-    const timer = window.setTimeout(() => setSuccessMessage(null), 4000);
-    return () => window.clearTimeout(timer);
-  }, [successMessage]);
 
   const handleConfirmDelete = async () => {
     if (!journalToDelete) return;
 
     try {
       await deleteJournal.mutateAsync({ journalId: journalToDelete._id });
-      setSuccessMessage("Journal deleted successfully.");
+      toastSuccess("Journal deleted successfully.");
       setJournalToDelete(null);
-    } catch {
-      // Error handling can be extended with inline error state if needed.
+    } catch (error) {
+      toastError(error, "Failed to delete journal. Please try again.");
     }
   };
 
@@ -124,15 +117,6 @@ export default function JournalsList({ journals, isLoading }: JournalsListProps)
 
   return (
     <section className="w-full">
-      {successMessage ? (
-        <div
-          className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-800"
-          role="status"
-        >
-          {successMessage}
-        </div>
-      ) : null}
-
       <div className="mb-6 rounded-2xl bg-linear-to-r from-[#024081] to-[#036eb6] px-6 py-4 text-white shadow-md">
         <p className="text-sm font-medium text-blue-100">
           <span className="text-white">{journals.length}</span> journal

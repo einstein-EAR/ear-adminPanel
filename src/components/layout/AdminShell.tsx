@@ -4,21 +4,16 @@ import { Menu } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AdminSidebar } from "./AdminSidebar";
-import { isAuthenticated } from "@/src/lib/auth";
+import { isAuthenticated, syncAuthCookie } from "@/src/lib/auth";
 
 const PUBLIC_ROUTES = ["/login"];
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     const media = window.matchMedia("(min-width: 1024px)");
@@ -37,33 +32,21 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }, [mobileOpen, isDesktop]);
 
   useEffect(() => {
-    if (isPublicRoute) {
-      setAuthChecked(true);
-      return;
-    }
+    syncAuthCookie();
+
+    if (isPublicRoute) return;
 
     if (!isAuthenticated()) {
       router.replace("/login");
-      return;
     }
-
-    setAuthChecked(true);
   }, [isPublicRoute, pathname, router]);
 
   if (isPublicRoute) {
     return <>{children}</>;
   }
 
-  if (!authChecked) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-sm text-[#858c93]">Loading...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen lg:flex">
+    <div className="min-h-screen lg:flex lg:h-dvh lg:overflow-hidden">
       <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-md lg:hidden">
         <button
           type="button"
@@ -92,7 +75,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       ) : null}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[min(100vw,18rem)] flex-col border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out lg:static lg:z-auto lg:w-64 lg:shrink-0 lg:translate-x-0 lg:shadow-none ${
+        className={`fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(100vw,18rem)] flex-col overflow-hidden border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out lg:static lg:z-auto lg:h-full lg:w-64 lg:shrink-0 lg:translate-x-0 lg:shadow-none ${
           mobileOpen || isDesktop ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-label="Admin side menu"
@@ -108,7 +91,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         />
       </aside>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:min-h-screen">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:overflow-y-auto">
         <main className="flex-1">{children}</main>
       </div>
     </div>

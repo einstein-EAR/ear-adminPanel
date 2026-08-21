@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, X } from "lucide-react";
+import { KeyRound, LogOut, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { clearAuth, getUser } from "@/src/lib/auth";
+import { clearAuth } from "@/src/lib/auth";
+import { useAuthUser } from "@/src/hooks";
 import { navItems } from "./navItems";
 
 type AdminSidebarProps = {
@@ -22,7 +23,7 @@ export function AdminSidebar({ onNavigate, onClose, showClose }: AdminSidebarPro
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const user = getUser();
+  const user = useAuthUser();
 
   const handleLogout = () => {
     clearAuth();
@@ -32,7 +33,7 @@ export function AdminSidebar({ onNavigate, onClose, showClose }: AdminSidebarPro
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <div className="shrink-0 border-b border-[#024081]/20 bg-linear-to-r from-[#024081] via-[#036eb6] to-[#024081] px-5 py-5">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -54,7 +55,7 @@ export function AdminSidebar({ onNavigate, onClose, showClose }: AdminSidebarPro
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Admin navigation">
+      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Admin navigation">
         <ul className="space-y-1">
           {navItems.map((item) => {
             const active = isActivePath(pathname, item.href);
@@ -104,6 +105,18 @@ export function AdminSidebar({ onNavigate, onClose, showClose }: AdminSidebarPro
             <p className="truncate text-xs text-[#858c93]">{user.email}</p>
           </div>
         ) : null}
+        <Link
+          href="/update-password"
+          onClick={onNavigate}
+          className={`mb-2 flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition ${
+            isActivePath(pathname, "/update-password")
+              ? "border-blue-200 bg-blue-50 text-[#024081]"
+              : "border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50 hover:text-[#024081]"
+          }`}
+        >
+          <KeyRound className="h-4 w-4" aria-hidden />
+          Update password
+        </Link>
         <button
           type="button"
           onClick={handleLogout}

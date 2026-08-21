@@ -1,14 +1,16 @@
 "use client";
 
-import { AlertCircle, Loader2, Plus, X } from "lucide-react";
+import { Loader2, Pencil, Plus, X } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
-import { ApiError } from "@/src/lib/api";
-import { useCreateIssue } from "@/src/hooks";
+import { useCreateIssue, useUpdateIssue } from "@/src/hooks";
+import { toastError, toastSuccess } from "@/src/lib/toast";
+import type { JournalIssue } from "@/src/types/issue";
 
 type CreateIssueModalProps = {
   journalId: string;
   open: boolean;
   onClose: () => void;
+  issue?: JournalIssue | null;
 };
 
 const fieldClassName =
@@ -18,17 +20,22 @@ export default function CreateIssueModal({
   journalId,
   open,
   onClose,
+  issue = null,
 }: CreateIssueModalProps) {
-  const [issueLabel, setIssueLabel] = useState("");
-  const [errors, setErrors] = useState({ issueLabel: "", form: "" });
+  const isEdit = Boolean(issue);
+  const [issueLabel, setIssueLabel] = useState(issue?.issueLabel ?? "");
+  const [description, setDescription] = useState(issue?.description ?? "");
+  const [errors, setErrors] = useState({ issueLabel: "", description: "" });
 
   const createIssue = useCreateIssue();
+  const updateIssue = useUpdateIssue();
+  const isPending = createIssue.isPending || updateIssue.isPending;
 
   useEffect(() => {
     if (!open) return;
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !isPending) onClose();
     };
 
     document.body.style.overflow = "hidden";
@@ -38,43 +45,51 @@ export default function CreateIssueModal({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [open, onClose]);
-
-  useEffect(() => {
-    if (!open) {
-      setIssueLabel("");
-      setErrors({ issueLabel: "", form: "" });
-    }
-  }, [open]);
+  }, [open, onClose, isPending]);
 
   if (!open) return null;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setErrors({ issueLabel: "", form: "" });
+    setErrors({ issueLabel: "", description: "" });
 
-    if (!issueLabel.trim()) {
-      setErrors({ issueLabel: "Issue label is required", form: "" });
+    const trimmedLabel = issueLabel.trim();
+    const trimmedDescription = description.trim();
+    const nextErrors = { issueLabel: "", description: "" };
+
+    if (!trimmedLabel) nextErrors.issueLabel = "Issue label is required";
+    if (!trimmedDescription) nextErrors.description = "Issue description is required";
+
+    if (nextErrors.issueLabel || nextErrors.description) {
+      setErrors(nextErrors);
       return;
     }
 
     try {
-      await createIssue.mutateAsync({ journalId, issueLabel });
+      if (isEdit && issue) {
+        await updateIssue.mutateAsync({
+          issueId: issue._id,
+          journalId,
+          issueLabel: trimmedLabel,
+          description: trimmedDescription,
+        });
+        toastSuccess("Issue updated successfully");
+      } else {
+        await createIssue.mutateAsync({
+          journalId,
+          issueLabel: trimmedLabel,
+          description: trimmedDescription,
+        });
+        toastSuccess("Issue created successfully");
+      }
       onClose();
-      alert("Issue created successfully");
-      // toast.success("Issue created successfully");
     } catch (error) {
-      const message =
-        error instanceof ApiError
-          ? typeof error.data === "object" &&
-            error.data !== null &&
-            "message" in error.data &&
-            typeof (error.data as { message: unknown }).message === "string"
-            ? (error.data as { message: string }).message
-            : error.message
-          : "Failed to create issue. Please try again.";
-
-      setErrors({ issueLabel: "", form: message });
+      toastError(
+        error,
+        isEdit
+          ? "Failed to update issue. Please try again."
+          : "Failed to create issue. Please try again.",
+      );
     }
   };
 
@@ -84,7 +99,8 @@ export default function CreateIssueModal({
         type="button"
         className="absolute inset-0 bg-slate-900/40"
         aria-label="Close modal overlay"
-        onClick={onClose}
+        onClick={isPending ? undefined : onClose}
+        disabled={isPending}
       />
 
       <div
@@ -96,16 +112,19 @@ export default function CreateIssueModal({
         <div className="mb-5 flex items-start justify-between gap-3">
           <div>
             <h2 id="create-issue-title" className="text-xl font-semibold text-[#092151]">
-              Create issue
+              {isEdit ? "Edit issue" : "Create issue"}
             </h2>
             <p className="mt-1 text-sm text-[#858c93]">
-              Add a new issue label for this journal.
+              {isEdit
+                ? "Update the issue label and description."
+                : "Add a new issue label and description for this journal."}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+            disabled={isPending}
+            className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
             aria-label="Close"
           >
             <X className="h-5 w-5" aria-hidden />
@@ -122,10 +141,11 @@ export default function CreateIssueModal({
             value={issueLabel}
             onChange={(e) => {
               setIssueLabel(e.target.value);
-              setErrors({ issueLabel: "", form: "" });
+              setErrors((prev) => ({ ...prev, issueLabel: "" }));
             }}
             placeholder="Jan 2026"
             className={fieldClassName}
+            disabled={isPending}
           />
           {errors.issueLabel ? (
             <p className="mt-1.5 text-sm text-red-600" role="alert">
@@ -133,9 +153,27 @@ export default function CreateIssueModal({
             </p>
           ) : null}
 
-          {errors.form ? (
-            <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
-              {errors.form}
+          <label
+            htmlFor="issue-description"
+            className="mb-1.5 mt-4 block text-sm font-medium text-slate-700"
+          >
+            Issue description
+          </label>
+          <textarea
+            id="issue-description"
+            value={description}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              setErrors((prev) => ({ ...prev, description: "" }));
+            }}
+            placeholder="Brief description of this issue"
+            rows={4}
+            className={`${fieldClassName} resize-y`}
+            disabled={isPending}
+          />
+          {errors.description ? (
+            <p className="mt-1.5 text-sm text-red-600" role="alert">
+              {errors.description}
             </p>
           ) : null}
 
@@ -143,19 +181,25 @@ export default function CreateIssueModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              disabled={isPending}
+              className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={createIssue.isPending}
+              disabled={isPending}
               className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-linear-to-r from-[#024081] to-[#036eb6] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:shadow-md disabled:opacity-60"
             >
-              {createIssue.isPending ? (
+              {isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                  Creating...
+                  {isEdit ? "Saving..." : "Creating..."}
+                </>
+              ) : isEdit ? (
+                <>
+                  <Pencil className="h-4 w-4" aria-hidden />
+                  Save changes
                 </>
               ) : (
                 <>
