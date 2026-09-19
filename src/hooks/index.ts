@@ -13,3 +13,8 @@ export { useDeleteIssue } from "./useDeleteIssue";
 export { useDeleteJournal } from "./useDeleteJournal";
 export { useUpdateCredentials } from "./useUpdateCredentials";
 export { useAuthUser } from "./useAuthUser";
+export {
+  useGetSiteSettings,
+  useUpdateSiteSettings,
+  SITE_SETTINGS_QUERY_KEY,
+} from "./useSiteSettings";

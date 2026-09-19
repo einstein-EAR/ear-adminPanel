@@ -3,6 +3,7 @@ import {
   FileText,
   LayoutDashboard,
   Settings,
+  Type,
   Upload,
   BookOpen,
   type LucideIcon,
@@ -45,6 +46,12 @@ export const navItems: NavItem[] = [
     href: "/volumes",
     icon: BookOpen,
     description: "Manage publication volumes",
+  },
+  {
+    label: "Title and Icons",
+    href: "/title-and-icons",
+    icon: Type,
+    description: "Site title, contact info and branding",
   },
   {
     label: "Settings",
