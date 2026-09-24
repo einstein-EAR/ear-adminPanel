@@ -18,81 +18,84 @@ import type { PaperSubmission } from "@/src/types/paperSubmission";
 const COLS = 3;
 const PAGE_SIZE = COLS * 2;
 
-function getFileName(url: string) {
-  try {
-    const segment = url.split("/").pop() ?? url;
-    const decoded = decodeURIComponent(segment);
-    const parts = decoded.split("-");
-    if (parts.length > 2) {
-      return parts.slice(2).join("-");
-    }
-    return decoded;
-  } catch {
-    return "View paper";
-  }
-}
+const URL_PREVIEW_LENGTH = 30;
 
-function PaperCard({ paper, index }: { paper: PaperSubmission; index: number }) {
-  const fileName = getFileName(paper.paperFileUrl);
+function PaperCard({ paper }: { paper: PaperSubmission }) {
+  const [showFullUrl, setShowFullUrl] = useState(false);
+  const fileUrl = paper.paperFileUrl;
+  const isLongUrl = fileUrl.length > URL_PREVIEW_LENGTH;
+  const visibleUrl =
+    showFullUrl || !isLongUrl ? fileUrl : `${fileUrl.slice(0, URL_PREVIEW_LENGTH)}...`;
 
   return (
-    <article className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow duration-200 hover:shadow-md">
+    <article className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow duration-200 hover:shadow-md sm:p-5">
       <div className="mb-4 flex items-start gap-3 border-b border-slate-100 pb-4">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[#024081] to-[#036eb6] text-sm font-semibold text-white">
           {(paper.name || "?").charAt(0).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-[#858c93]">#{index}</p>
-          <h3 className="truncate text-base font-semibold text-[#092151]">
+          <h3 className="text-base font-semibold wrap-break-word text-[#092151]">
             {paper.name || "—"}
           </h3>
         </div>
       </div>
 
       <ul className="flex flex-1 flex-col gap-3 text-sm">
-        <li className="flex items-start gap-2.5 text-slate-700">
+        <li className="flex min-w-0 items-start gap-2.5 text-slate-700">
           <ScrollText className="mt-0.5 h-4 w-4 shrink-0 text-[#036eb6]" aria-hidden />
-          <span>
+          <span className="min-w-0">
             <span className="block text-xs font-medium text-[#858c93]">Paper title</span>
-            <span className="font-medium text-[#092151]">{paper.titleOfPaper || "—"}</span>
+            <span className="font-medium wrap-break-word text-[#092151]">{paper.titleOfPaper || "—"}</span>
           </span>
         </li>
-        <li className="flex items-start gap-2.5 text-slate-700">
+        <li className="flex min-w-0 items-start gap-2.5 text-slate-700">
           <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#036eb6]" aria-hidden />
           <span className="break-all">{paper.emailId || "—"}</span>
         </li>
-        <li className="flex items-start gap-2.5 text-slate-700">
+        <li className="flex min-w-0 items-start gap-2.5 text-slate-700">
           <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#036eb6]" aria-hidden />
-          <span>{paper.mobile || "—"}</span>
+          <span className="break-all">{paper.mobile || "—"}</span>
         </li>
-        <li className="flex items-start gap-2.5 text-slate-700">
+        <li className="flex min-w-0 items-start gap-2.5 text-slate-700">
           <Globe className="mt-0.5 h-4 w-4 shrink-0 text-[#036eb6]" aria-hidden />
-          <span>{paper.country || "—"}</span>
+          <span className="wrap-break-word">{paper.country || "—"}</span>
         </li>
-        <li className="flex items-start gap-2.5 text-[#858c93]">
+        <li className="flex min-w-0 items-start gap-2.5 text-[#858c93]">
           <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-[#036eb6]" aria-hidden />
-          <span className="line-clamp-4">{paper.message || "—"}</span>
+          <span className="line-clamp-4 wrap-break-word">{paper.message || "—"}</span>
         </li>
-        <li className="flex items-start gap-2.5 border-t border-slate-100 pt-3">
+        <li className="flex min-w-0 items-start gap-2.5 border-t border-slate-100 pt-3">
           <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#036eb6]" aria-hidden />
           <span className="min-w-0">
             <span className="block text-xs font-medium text-[#858c93]">Submitted file</span>
-            {paper.paperFileUrl ? (
-              <a
-                href={paper.paperFileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1 inline-flex max-w-full items-center gap-1.5 truncate font-medium text-[#024081] transition hover:text-[#036eb6]"
-              >
-                <span className="truncate">{fileName}</span>
-                <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              </a>
+            {fileUrl ? (
+              <span className="mt-1 flex min-w-0 items-start gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isLongUrl) setShowFullUrl((current) => !current);
+                  }}
+                  className="min-w-0 text-left font-medium break-all text-[#024081] transition hover:text-[#036eb6]"
+                  aria-expanded={isLongUrl ? showFullUrl : undefined}
+                >
+                  {visibleUrl}
+                </button>
+                <a
+                  href={fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-0.5 shrink-0 text-[#024081] transition hover:text-[#036eb6]"
+                  aria-label="Open submitted file"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                </a>
+              </span>
             ) : (
               <span>—</span>
             )}
           </span>
         </li>
-        <li className="flex items-start gap-2.5 text-slate-600">
+        <li className="flex min-w-0 items-start gap-2.5 text-slate-600">
           <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#036eb6]" aria-hidden />
           <span>
             <span className="block text-xs font-medium text-[#858c93]">Submitted (IST)</span>
@@ -158,9 +161,9 @@ export default function PaperData({ paperSubmissions }: { paperSubmissions: Pape
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {visiblePapers.map((paper, index) => (
-              <PaperCard key={paper._id} paper={paper} index={index + 1} />
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2 xl:grid-cols-3">
+            {visiblePapers.map((paper) => (
+              <PaperCard key={paper._id} paper={paper} />
             ))}
           </div>
 

@@ -60,7 +60,7 @@ export default function AllIssuesContent() {
           No journal selected. Open a journal from the journals list first.
         </div>
         <Link
-          href="/upload-paper"
+          href="/view-journals"
           className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#024081] hover:text-[#036eb6]"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
@@ -73,7 +73,7 @@ export default function AllIssuesContent() {
   return (
     <PageContainer>
       <Link
-        href="/upload-paper"
+        href="/view-journals"
         className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#024081] transition hover:text-[#036eb6]"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden />
