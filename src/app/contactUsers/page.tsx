@@ -13,15 +13,8 @@ export default function ContactUsers() {
     <PageContainer>
       <PageHeader
         title="Contact submissions"
-        description="Review inquiries received through the publication contact form."
+        description="Review inquiries from the contact form. Open a row to see the email, subject, and message."
       />
-
-      <div className="mb-6 rounded-2xl bg-linear-to-r from-[#024081] to-[#036eb6] px-6 py-4 text-white shadow-md">
-        <p className="text-sm font-medium text-blue-100">
-          <span className="text-white">{contactForms?.length ?? 0}</span> total submission
-          {contactForms?.length === 1 ? "" : "s"}
-        </p>
-      </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-16 text-sm font-medium text-[#036eb6]">

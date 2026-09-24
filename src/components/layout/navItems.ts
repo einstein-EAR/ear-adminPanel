@@ -6,6 +6,7 @@ import {
   Type,
   Upload,
   BookOpen,
+  Library,
   type LucideIcon,
 } from "lucide-react";
 
@@ -40,6 +41,12 @@ export const navItems: NavItem[] = [
     href: "/upload-paper",
     icon: Upload,
     description: "Add or publish new papers",
+  },
+  {
+    label: "View Journals",
+    href: "/view-journals",
+    icon: Library,
+    description: "Browse created journals",
   },
   {
     label: "Volumes & Issues",
