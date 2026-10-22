@@ -2,11 +2,13 @@ import {
   Contact,
   FileText,
   LayoutDashboard,
+  Newspaper,
   Settings,
   Type,
   Upload,
   BookOpen,
   Library,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -59,6 +61,18 @@ export const navItems: NavItem[] = [
     href: "/title-and-icons",
     icon: Type,
     description: "Site title, contact info and branding",
+  },
+  {
+    label: "Editorial Board",
+    href: "/editorial-board",
+    icon: Users,
+    description: "Editor categories and board members",
+  },
+  {
+    label: "Latest News",
+    href: "/latest-news",
+    icon: Newspaper,
+    description: "Homepage news cards and updates",
   },
   {
     label: "Settings",

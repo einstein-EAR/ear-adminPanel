@@ -49,9 +49,14 @@ function JournalCard({ journal, onDelete }: JournalCardProps) {
         </div>
 
         <div className="min-w-0 flex-1 py-0.5">
-          <h3 className="text-sm font-bold uppercase leading-snug text-[#1d4f91] sm:text-base">
-            {journal.title}
-          </h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-bold uppercase leading-snug text-[#1d4f91] sm:text-base">
+              {journal.title}
+            </h3>
+            <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#024081]">
+              {journal.category === "conference" ? "Conferences" : "Journal"}
+            </span>
+          </div>
 
           <p className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-md bg-white px-2 py-1 text-xs font-semibold text-[#036eb6]">
             <Hash className="h-3.5 w-3.5 shrink-0" aria-hidden />
