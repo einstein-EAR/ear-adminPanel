@@ -1,9 +1,10 @@
 "use client";
 
-import { BookOpen, Hash, ImagePlus, Loader2, ScrollText } from "lucide-react";
+import { BookOpen, Hash, ImagePlus, Layers, Loader2, ScrollText } from "lucide-react";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useCreateJournal } from "@/src/hooks";
 import { toastError, toastSuccess } from "@/src/lib/toast";
+import type { JournalCategory } from "@/src/types/journal";
 
 const fieldClassName =
   "w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-slate-800 placeholder:text-slate-400 transition-colors duration-300 focus:border-[#036eb6] focus:outline-none focus:ring-2 focus:ring-[#036eb6]/20";
@@ -12,6 +13,7 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
+  const [category, setCategory] = useState<JournalCategory>("journal");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
@@ -74,15 +76,21 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
         title,
         description,
         serialNumber,
+        category,
         image,
       });
 
       setTitle("");
       setDescription("");
       setSerialNumber("");
+      setCategory("journal");
       handleImageChange(null);
       setFileInputKey((prev) => prev + 1);
-      toastSuccess("Journal created successfully.");
+      toastSuccess(
+        category === "conference"
+          ? "Conference created successfully."
+          : "Journal created successfully.",
+      );
       onCreated?.();
     } catch (error) {
       toastError(error, "Failed to create journal. Please try again.");
@@ -103,7 +111,7 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
           <div>
             <h2 className="text-xl font-semibold text-[#092151]">Create journal</h2>
             <p className="text-sm text-[#858c93]">
-              Add a new journal with title, description, serial number, and cover image.
+              Add a journal or conference with title, description, serial number, and cover image.
             </p>
           </div>
         </div>
@@ -164,6 +172,26 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
                     {errors.serialNumber}
                   </p>
                 ) : null}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="journal-category" className="mb-1.5 block text-sm font-medium text-slate-700">
+              Show on website
+            </label>
+            <div className="flex items-start gap-3">
+              <Layers className="mt-3 h-5 w-5 shrink-0 text-[#036eb6]" aria-hidden />
+              <div className="min-w-0 flex-1">
+                <select
+                  id="journal-category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as JournalCategory)}
+                  className={fieldClassName}
+                >
+                  <option value="journal">Our Journals</option>
+                  <option value="conference">Conferences</option>
+                </select>
               </div>
             </div>
           </div>
@@ -255,8 +283,10 @@ export default function CreateJournalForm({ onCreated }: { onCreated?: () => voi
         {createJournal.isPending ? (
           <>
             <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
-            Creating journal...
+            {category === "conference" ? "Creating conference..." : "Creating journal..."}
           </>
+        ) : category === "conference" ? (
+          "Create conference"
         ) : (
           "Create journal"
         )}

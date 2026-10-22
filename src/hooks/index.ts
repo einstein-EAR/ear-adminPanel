@@ -18,3 +18,20 @@ export {
   useUpdateSiteSettings,
   SITE_SETTINGS_QUERY_KEY,
 } from "./useSiteSettings";
+export {
+  useGetEditorialBoard,
+  useCreateEditorialCategory,
+  useUpdateEditorialCategory,
+  useDeleteEditorialCategory,
+  useCreateEditorialMember,
+  useUpdateEditorialMember,
+  useDeleteEditorialMember,
+  EDITORIAL_BOARD_QUERY_KEY,
+} from "./useEditorialBoard";
+export {
+  useGetLatestNews,
+  useCreateLatestNews,
+  useUpdateLatestNews,
+  useDeleteLatestNews,
+  LATEST_NEWS_QUERY_KEY,
+} from "./useLatestNews";

@@ -10,6 +10,7 @@ function toJournalFormData(input: CreateJournalInput): FormData {
   formData.append("title", input.title.trim());
   formData.append("description", input.description.trim());
   formData.append("serialNumber", input.serialNumber.trim());
+  formData.append("category", input.category);
   formData.append("image", input.image);
   return formData;
 }
