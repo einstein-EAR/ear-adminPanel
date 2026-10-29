@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import ConfirmDialog from "@/src/components/ui/ConfirmDialog";
+import ImageAdjuster from "@/src/components/ui/ImageAdjuster";
 import { formatToIST } from "@/src/lib/formatDate";
 import { toastError, toastSuccess } from "@/src/lib/toast";
 import {
@@ -44,6 +45,9 @@ export default function LatestNewsManager() {
   const [sortOrder, setSortOrder] = useState("0");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [sourceFile, setSourceFile] = useState<File | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [adjustOpen, setAdjustOpen] = useState(false);
   const [fileInputKey, setFileInputKey] = useState(0);
   const [itemToDelete, setItemToDelete] = useState<LatestNews | null>(null);
   const [errors, setErrors] = useState({
@@ -70,6 +74,10 @@ export default function LatestNewsManager() {
     setPublishedAt("");
     setSortOrder("0");
     handleImageChange(null);
+    setImagePreview(null);
+    setSourceFile(null);
+    setPendingFile(null);
+    setAdjustOpen(false);
     setFileInputKey((prev) => prev + 1);
     setErrors({ title: "", excerpt: "", image: "", sortOrder: "" });
   };
@@ -81,6 +89,9 @@ export default function LatestNewsManager() {
     setPublishedAt(toDateInputValue(item.publishedAt));
     setSortOrder(String(item.sortOrder ?? 0));
     handleImageChange(null);
+    setSourceFile(null);
+    setPendingFile(null);
+    setAdjustOpen(false);
     setImagePreview(item.imageUrl);
     setFileInputKey((prev) => prev + 1);
     setErrors({ title: "", excerpt: "", image: "", sortOrder: "" });
@@ -286,20 +297,41 @@ export default function LatestNewsManager() {
             </div>
 
             <div>
-              <label htmlFor="news-image" className="mb-1.5 block text-sm font-medium text-slate-700">
-                Image {editing ? "(optional on edit)" : ""}
-              </label>
+              <div className="mb-1.5 flex items-center justify-between gap-3">
+                <label htmlFor="news-image" className="block text-sm font-medium text-slate-700">
+                  Image {editing ? "(optional on edit)" : ""}
+                </label>
+                {sourceFile || imagePreview ? (
+                  <button
+                    type="button"
+                    onClick={() => setAdjustOpen(true)}
+                    className="text-sm font-semibold text-[#036eb6] transition hover:text-[#024081]"
+                  >
+                    Adjust framing
+                  </button>
+                ) : null}
+              </div>
               <input
                 key={fileInputKey}
                 id="news-image"
                 type="file"
                 accept="image/*"
                 onChange={(e) => {
-                  handleImageChange(e.target.files?.[0] ?? null);
+                  const file = e.target.files?.[0] ?? null;
                   setErrors((prev) => ({ ...prev, image: "" }));
+                  if (!file) return;
+                  if (!file.type.startsWith("image/")) {
+                    setErrors((prev) => ({ ...prev, image: "Only image files are allowed" }));
+                    return;
+                  }
+                  setPendingFile(file);
+                  setAdjustOpen(true);
                 }}
                 className="w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-[#f4f8fc] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[#024081] hover:file:bg-blue-100"
               />
+              <p className="mt-1.5 text-xs text-[#858c93]">
+                After you choose a photo, you can zoom and reposition it before saving.
+              </p>
               {errors.image ? (
                 <p className="mt-1.5 text-sm text-red-600" role="alert">
                   {errors.image}
@@ -400,6 +432,25 @@ export default function LatestNewsManager() {
           ))}
         </section>
       )}
+
+      <ImageAdjuster
+        open={adjustOpen}
+        file={pendingFile ?? sourceFile}
+        imageUrl={pendingFile || sourceFile ? null : imagePreview}
+        onClose={() => {
+          if (pendingFile) setFileInputKey((prev) => prev + 1);
+          setPendingFile(null);
+          setAdjustOpen(false);
+        }}
+        onApply={(cropped) => {
+          if (pendingFile) setSourceFile(pendingFile);
+          else if (!sourceFile) setSourceFile(cropped);
+          handleImageChange(cropped);
+          setPendingFile(null);
+          setErrors((prev) => ({ ...prev, image: "" }));
+          setAdjustOpen(false);
+        }}
+      />
 
       <ConfirmDialog
         open={Boolean(itemToDelete)}

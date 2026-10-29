@@ -29,6 +29,11 @@ export {
   EDITORIAL_BOARD_QUERY_KEY,
 } from "./useEditorialBoard";
 export {
+  useGetPublicationEthics,
+  useUpdatePublicationEthics,
+  PUBLICATION_ETHICS_QUERY_KEY,
+} from "./usePublicationEthics";
+export {
   useGetLatestNews,
   useCreateLatestNews,
   useUpdateLatestNews,

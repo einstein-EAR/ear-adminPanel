@@ -12,7 +12,7 @@ export default function LatestNewsPage() {
     <PageContainer>
       <PageHeader
         title="Latest news"
-        description="Create, edit, and delete news items with images. These appear in the Latest news section on the public website."
+        description="Create, edit, and delete news items with images. Crop and position each photo before it is saved. These appear in the Latest news section on the public website."
       />
 
       {isError ? (
