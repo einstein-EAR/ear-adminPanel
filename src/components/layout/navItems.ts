@@ -3,6 +3,7 @@ import {
   FileText,
   LayoutDashboard,
   Newspaper,
+  Scale,
   Settings,
   Type,
   Upload,
@@ -73,6 +74,12 @@ export const navItems: NavItem[] = [
     href: "/latest-news",
     icon: Newspaper,
     description: "Homepage news cards and updates",
+  },
+  {
+    label: "Publication Ethics",
+    href: "/publication-ethics",
+    icon: Scale,
+    description: "Write and edit the ethics statement",
   },
   {
     label: "Settings",
