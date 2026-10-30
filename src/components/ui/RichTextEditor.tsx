@@ -136,14 +136,15 @@ function applyFontSize(editor: HTMLElement, size: string) {
   document.execCommand("fontSize", false, "7");
 
   editor.querySelectorAll("font[size='7']").forEach((node) => {
-    if (node.dataset.existingSize) {
-      delete node.dataset.existingSize;
+    const element = node as HTMLElement;
+    if (element.dataset.existingSize) {
+      delete element.dataset.existingSize;
       return;
     }
     const span = document.createElement("span");
     span.style.fontSize = size;
-    span.innerHTML = node.innerHTML;
-    node.replaceWith(span);
+    span.innerHTML = element.innerHTML;
+    element.replaceWith(span);
   });
 
   editor.querySelectorAll("span").forEach((span) => {
